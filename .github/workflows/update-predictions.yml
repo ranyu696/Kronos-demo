@@ -1,0 +1,77 @@
+name: Update ETH Predictions
+
+on:
+  schedule:
+    # Run every hour at minute 5
+    - cron: '5 * * * *'
+  workflow_dispatch:  # Allow manual trigger
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install requests pandas numpy matplotlib torch transformers huggingface-hub
+    
+    - name: Cache Kronos model
+      uses: actions/cache@v3
+      with:
+        path: ../Kronos_model
+        key: kronos-model-v1
+        restore-keys: kronos-model-
+    
+    - name: Run prediction update
+      run: |
+        # Run the update script once (not in scheduler mode)
+        python update_predictions_once.py
+      env:
+        HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    
+    - name: Commit and push changes
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        git add prediction_chart.png index.html
+        git diff --cached --quiet || git commit -m "Auto-update ETH forecast for $(date -u +'%Y-%m-%d %H:%M') UTC"
+        git push
+    
+    - name: Setup Pages
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+      uses: actions/configure-pages@v3
+    
+    - name: Upload artifact
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+      uses: actions/upload-pages-artifact@v2
+      with:
+        path: '.'
+    
+    - name: Deploy to GitHub Pages
+      if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+      id: deployment
+      uses: actions/deploy-pages@v2

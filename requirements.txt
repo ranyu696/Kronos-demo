@@ -1,0 +1,7 @@
+torch>=2.0.0
+pandas>=1.5.0
+numpy>=1.24.0
+matplotlib>=3.5.0
+python-binance>=1.0.17
+transformers>=4.30.0
+huggingface-hub>=0.16.0

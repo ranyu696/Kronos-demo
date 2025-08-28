@@ -18,7 +18,7 @@ from model import KronosTokenizer, Kronos, KronosPredictor
 Config = {
     "REPO_PATH": Path(__file__).parent.resolve(),
     "MODEL_PATH": "../Kronos_model",
-    "SYMBOL": 'BTCUSDT',
+    "SYMBOL": 'ETHUSDT',
     "INTERVAL": '1h',
     "HIST_POINTS": 360,
     "PRED_HORIZON": 24,
